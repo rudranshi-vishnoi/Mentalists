@@ -182,12 +182,12 @@
             contents: [{ parts: [{ text: msg }] }]
           })
         });
-        if (!res.ok) throw new Error('Status ' + res.status);
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'Status ' + res.status); }
         const data = await res.json();
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Something went wrong. Please try again.";
         respBody.textContent = reply;
       } catch (e) {
-        respBody.innerHTML = '<span class="error-msg">Couldn\'t get a response right now. Please try again in a moment.</span>';
+        respBody.innerHTML = '<span class="error-msg">' + e.message + '</span>';
       }
 
       sendBtn.disabled = false;
