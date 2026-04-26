@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Drop-in Box</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sage: #7A9E87;
+      --sage-light: #EAF2ED;
+      --sage-dark: #3D6B50;
+      --blue: #6B8CAE;
+      --blue-light: #EAF0F7;
+      --blue-dark: #2E5070;
+      --warm: #F9F6F1;
+      --warm-mid: #EDE8DF;
+      --ink: #1C1C1C;
+      --muted: #7A7672;
+    }
+    html, body { min-height: 100vh; font-family: 'DM Sans', sans-serif; background: var(--warm); color: var(--ink); }
+    body { display: flex; flex-direction: column; align-items: center; padding: 48px 20px 80px; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+    .header { text-align: center; margin-bottom: 40px; animation: fadeUp 0.7s ease both; }
+    .badge { display: inline-block; background: var(--warm-mid); color: var(--muted); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 6px 14px; border-radius: 40px; margin-bottom: 18px; }
+    h1 { font-family: 'DM Serif Display', serif; font-size: clamp(2rem, 5vw, 2.8rem); color: var(--ink); line-height: 1.15; margin-bottom: 12px; }
+    h1 em { font-style: italic; color: var(--sage-dark); }
+    .subtitle { font-size: 15px; color: var(--muted); font-weight: 300; max-width: 380px; margin: 0 auto; line-height: 1.7; }
+
+    .card { width: 100%; max-width: 560px; background: white; border-radius: 24px; padding: 36px 32px; border: 1px solid var(--warm-mid); animation: fadeUp 0.7s 0.15s ease both; }
+
+    .mode-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block; }
+    .btn-group { display: flex; gap: 8px; margin-bottom: 28px; }
+    .mode-btn { flex: 1; padding: 12px 10px; border-radius: 12px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; border: 1.5px solid var(--warm-mid); background: var(--warm); color: var(--muted); transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 7px; }
+    .mode-btn:hover { border-color: #ccc; color: var(--ink); }
+    .mode-btn.active-peer { background: var(--blue-light); border-color: var(--blue); color: var(--blue-dark); }
+    .mode-btn.active-pro  { background: var(--sage-light); border-color: var(--sage); color: var(--sage-dark); }
+
+    .field-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; display: block; }
+    textarea { width: 100%; border: 1.5px solid var(--warm-mid); border-radius: 12px; padding: 14px 16px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--ink); background: var(--warm); resize: vertical; min-height: 120px; outline: none; transition: border-color 0.2s; line-height: 1.6; }
+    textarea::placeholder { color: #bbb; }
+    textarea:focus { border-color: var(--sage); background: white; }
+
+    .char-row { display: flex; justify-content: flex-end; margin-top: 6px; margin-bottom: 20px; }
+    .char-hint { font-size: 11px; color: #bbb; }
+
+    .send-btn { width: 100%; padding: 14px; background: var(--ink); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; letter-spacing: 0.02em; transition: opacity 0.2s, transform 0.15s; }
+    .send-btn:hover { opacity: 0.82; }
+    .send-btn:active { transform: scale(0.98); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .response-wrap { width: 100%; max-width: 560px; margin-top: 20px; display: none; }
+    .response-wrap.visible { display: block; animation: fadeUp 0.5s ease both; }
+    .response-card { border-radius: 20px; padding: 24px 28px; border-left: 5px solid; }
+    .response-card.peer { background: var(--blue-light); border-left-color: var(--blue); }
+    .response-card.pro  { background: var(--sage-light); border-left-color: var(--sage); }
+
+    .resp-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .resp-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; }
+    .resp-avatar.peer { background: #C8DAF0; }
+    .resp-avatar.pro  { background: #B5D9C3; }
+    .resp-name { font-size: 14px; font-weight: 500; }
+    .resp-name.peer { color: var(--blue-dark); }
+    .resp-name.pro  { color: var(--sage-dark); }
+    .resp-sub { font-size: 11px; margin-top: 2px; }
+    .resp-sub.peer { color: var(--blue); }
+    .resp-sub.pro  { color: var(--sage); }
+    .resp-body { font-size: 14px; line-height: 1.85; }
+    .resp-body.peer { color: var(--blue-dark); }
+    .resp-body.pro  { color: var(--sage-dark); }
+
+    .dot-loader { display: inline-flex; gap: 5px; align-items: center; padding: 4px 0; }
+    .dot-loader span { width: 7px; height: 7px; border-radius: 50%; animation: blink 1.2s infinite; }
+    .dot-loader.peer span { background: var(--blue); }
+    .dot-loader.pro  span { background: var(--sage); }
+    .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+    .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%,80%,100%{opacity:0.15} 40%{opacity:1} }
+
+    .error-msg { font-size: 13px; color: #c0392b; }
+    .footer { margin-top: 48px; text-align: center; font-size: 12px; color: #ccc; animation: fadeUp 0.7s 0.3s ease both; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="badge">🌿 Safe space · Anonymous</div>
+    <h1>Your <em>drop-in</em> box</h1>
+    <p class="subtitle">Whatever's on your mind — big or small — you can share it here. Someone's listening.</p>
+  </div>
+
+  <div class="card">
+    <span class="mode-label">Who would you like to hear from?</span>
+    <div class="btn-group">
+      <button class="mode-btn active-peer" id="btn-peer" onclick="selectMode('peer')">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.4"/><path d="M2 13c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Fellow student
+      </button>
+      <button class="mode-btn" id="btn-pro" onclick="selectMode('pro')">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="7" width="12" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 7V5a3 3 0 1 1 6 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Professional help
+      </button>
+    </div>
+
+    <label class="field-label" for="issue-input">What's going on?</label>
+    <textarea id="issue-input" maxlength="1000" placeholder="Share anything — stress, academics, relationships, loneliness, anxiety... this is a safe space."></textarea>
+    <div class="char-row"><span class="char-hint"><span id="char-count">0</span> / 1000</span></div>
+
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">Drop it in the box</button>
+  </div>
+
+  <div class="response-wrap" id="response-wrap">
+    <div class="response-card" id="response-card">
+      <div class="resp-header">
+        <div class="resp-avatar" id="resp-avatar"></div>
+        <div>
+          <div class="resp-name" id="resp-name"></div>
+          <div class="resp-sub"  id="resp-sub"></div>
+        </div>
+      </div>
+      <div class="resp-body" id="resp-body"></div>
+    </div>
+  </div>
+
+  <div class="footer">Your message is anonymous · Student wellbeing initiative</div>
+
+  <script>
+    let currentMode = 'peer';
+    const textarea    = document.getElementById('issue-input');
+    const charCount   = document.getElementById('char-count');
+    const sendBtn     = document.getElementById('send-btn');
+    const responseWrap= document.getElementById('response-wrap');
+    const responseCard= document.getElementById('response-card');
+    const respAvatar  = document.getElementById('resp-avatar');
+    const respName    = document.getElementById('resp-name');
+    const respSub     = document.getElementById('resp-sub');
+    const respBody    = document.getElementById('resp-body');
+
+    textarea.addEventListener('input', () => { charCount.textContent = textarea.value.length; });
+
+    function selectMode(mode) {
+      currentMode = mode;
+      document.getElementById('btn-peer').className = 'mode-btn' + (mode === 'peer' ? ' active-peer' : '');
+      document.getElementById('btn-pro').className  = 'mode-btn' + (mode === 'pro'  ? ' active-pro'  : '');
+      responseWrap.classList.remove('visible');
+    }
+
+    async function sendMessage() {
+      const msg = textarea.value.trim();
+      if (!msg) return;
+      const isPro = currentMode === 'pro';
+
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending...';
+
+      responseCard.className = 'response-card ' + (isPro ? 'pro' : 'peer');
+      respAvatar.className   = 'resp-avatar '   + (isPro ? 'pro' : 'peer');
+      respAvatar.textContent = isPro ? '🧠' : '👋';
+      respName.className     = 'resp-name '     + (isPro ? 'pro' : 'peer');
+      respName.textContent   = isPro ? 'Mental health counsellor' : 'Fellow student';
+      respSub.className      = 'resp-sub '      + (isPro ? 'pro' : 'peer');
+      respSub.textContent    = isPro ? 'Professional support' : 'Peer support';
+      respBody.className     = 'resp-body '     + (isPro ? 'pro' : 'peer');
+      respBody.innerHTML     = '<div class="dot-loader ' + (isPro ? 'pro' : 'peer') + '"><span></span><span></span><span></span></div>';
+      responseWrap.classList.add('visible');
+      responseWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      const systemPrompt = isPro
+        ? `You are a warm, empathetic college mental health counsellor responding to a student's anonymous message in a student wellbeing drop-in box. Your tone is calm, professional, and non-judgmental. Validate the student's experience, offer a thoughtful perspective or coping strategy, and gently encourage them to seek further support if needed. Be concise (3-5 sentences). Do not diagnose. Always end with something affirming. Do not use lists or bullet points.`
+        : `You are a caring, relatable college student responding to another student's anonymous message in a student wellbeing drop-in box. Speak naturally and warmly like a good friend who really listens. Normalise their feelings, share a brief perspective, remind them they're not alone. No clinical language, no lists, 3-5 sentences. Do not give medical advice.`;
+
+      try {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true"
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-6",
+            max_tokens: 1000,
+            system: systemPrompt,
+            messages: [{ role: "user", content: msg }]
+          })
+        });
+        if (!res.ok) throw new Error('Status ' + res.status);
+        const data = await res.json();
+        const reply = data.content?.find(b => b.type === 'text')?.text || "Something went wrong. Please try again.";
+        respBody.textContent = reply;
+      } catch (e) {
+        respBody.innerHTML = '<span class="error-msg">Couldn\'t get a response right now. Please try again in a moment.</span>';
+      }
+
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Drop it in the box';
+    }
+  </script>
+</body>
+</html>
